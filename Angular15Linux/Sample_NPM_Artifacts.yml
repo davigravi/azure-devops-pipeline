@@ -1,0 +1,66 @@
+name: Sample_NPM_Artifacts_$(date:yyyyMMdd.HHmm)
+resources:
+  repositories:
+  - repository: self
+    type: git
+    ref: refs/heads/DevOpsReferenceApps_FB_DevOpsCH_Angular15Linux
+jobs:
+- job: Job_1
+  displayName: Agent job 1
+  pool:
+    name: DEV-AZURE-NODE14-Build
+  steps:
+  - checkout: self
+    fetchDepth: 1
+  - task: JFrog.jfrog-artifactory-vsts-extension.artifactory-npm.ArtifactoryNpm@2
+    displayName: Artifactory npm install
+    enabled: False
+    inputs:
+      artifactoryService: ba46faa4-7cdb-4830-a540-1f173832787f
+      sourceRepo: npm
+      workingFolder: Angular15Linux
+      collectBuildInfo: true
+  - task: Npm@1
+    displayName: npm install
+    inputs:
+      workingDir: Angular15Linux
+      verbose: false
+      customCommand: build
+      customEndpoint: d8964ed7-0993-45e2-8d35-7b14e4c94459
+  - task: Npm@1
+    displayName: npm custom
+    inputs:
+      command: custom
+      workingDir: Angular15Linux
+      verbose: false
+      customCommand: run build
+      customEndpoint: d8964ed7-0993-45e2-8d35-7b14e4c94459
+  - task: ArchiveFiles@99
+    displayName: Archive Angular15Linux/dist
+    inputs:
+      rootFolderOrFile: Angular15Linux/dist
+      includeRootFolder: false
+  - task: JFrog.jfrog-artifactory-vsts-extension.artifactory-generic-upload.ArtifactoryGenericUpload@2
+    displayName: Artifactory Generic Upload
+    inputs:
+      artifactoryService: cd04cb2c-3c9e-4206-85ca-ee0a4b880913
+      fileSpec: >-
+        {
+          "files": [
+            {
+              "pattern": "$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip",
+              "target": "Inv_Binaries/Systems/Sample/"
+            }
+          ]
+        }
+      collectBuildInfo: true
+  - task: JFrog.jfrog-artifactory-vsts-extension.artifactory-xray-scan-task.ArtifactoryXrayScan@1
+    displayName: Artifactory Xray Scan
+    enabled: False
+    inputs:
+      artifactoryService: cd04cb2c-3c9e-4206-85ca-ee0a4b880913
+  - task: JFrog.jfrog-artifactory-vsts-extension.artifactory-publish-build-info.ArtifactoryPublishBuildInfo@1
+    displayName: Artifactory Publish Build Info
+    inputs:
+      artifactoryService: cd04cb2c-3c9e-4206-85ca-ee0a4b880913
+...
