@@ -17,3 +17,12 @@ steps:
     echo Add other tasks to build, test, and deploy your project.
     echo See https://aka.ms/yaml
   displayName: 'Run a multi-line script'
+- task: JFrogNuGet@1
+  inputs:
+    command: 'restore'
+    artifactoryConnection: 'jonwtest'
+    targetResolveRepo: 'nuget-virtual'
+    solutionPath: '**/*.sln'
+    collectBuildInfo: true
+    buildName: '$(Build.DefinitionName)'
+    buildNumber: '$(Build.BuildNumber)'
